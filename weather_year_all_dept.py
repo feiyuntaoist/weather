@@ -161,106 +161,33 @@ if __name__ == '__main__':
 	#days_set is no order, so we must use list, but now the valiue is string
 	days_list = list(days_set)
 	days_list.sort()   
-	#ls saved statics frequnce of Max AQI of WanLiu
-	#ls2 saved Max AQI (key , value) = {day, max_value}
-	ls = []
-	ls2 = {}
-	ls3_aqi = []
-	for day in days_set:
-		tmp_list = [so2_dict[day][6], no2_dict[day][6], pm10_dict[day][6], o3_dict[day][6], pm25_dict[day][6]]
-		ls.append(tmp_list.index(max(tmp_list)))
-		ls2[day] = max(tmp_list)
-	
-	#cac my owned AQI,  Almost same with AQI
-	#for day in days_list:
-	#	ls3_aqi.append(ls2[day])  
-	pie_dict = Counter(ls)
-	pie_name = []
-	pie_value= []
-	for (key, value) in pie_dict.items():
-		pie_value.append(value)
-		if key==0:
-			pie_name.append('二氧化碳')
-		elif key==1:
-			pie_name.append('二氧化氮')
-		elif key==2:
-			pie_name.append('PM10')
-		elif key==3:
-			pie_name.append('臭氧')
-		elif key==4:
-			pie_name.append('PM2.5')
 
-	wanliu_aqi_list=[]
-	month_set = set()
-	month_list =[]
-	month_aqi_sum = [0]*12
-	month_aqi_count = [0]*12
-	month_aqi_avg = [0]*12
+	#save Sum AQI Value include every day
+	
+	aqi_sum_list = [0]*COL_NUM
+	aqi_count_list = [0]*COL_NUM
+	aqi_avg_list = [0]*COL_NUM
+
 	for day in days_list:
-		wanliu_aqi_list.append(aqi_dict[day][6])
 		#Now get the avarage Month AQI
 		#the days_list is ordered, but the cell is String
-		tmp_int_month = int(day[4:6])   #cut the int month
-		month_set.add(day[4:6])         #cut the string month, for the display in the Graphics
-		month_aqi_sum[tmp_int_month-1] += aqi_dict[day][6]
-		month_aqi_count[tmp_int_month-1] += 1
-	month_aqi_avg = list(map(lambda x,y: round(x/y), month_aqi_sum ,month_aqi_count   ))
+		for index, aqi in enumerate(aqi_dict[day]):
+			if aqi>0:
+				aqi_sum_list[index] += aqi
+				aqi_count_list[index] +=1
 
-	month_list = [int(x) for x in list(month_set)]
-	month_list.sort()
+	aqi_avg_list = list(map(lambda x,y: round(x/y) if y>0 else 0, aqi_sum_list ,aqi_count_list))
+	print(aqi_avg_list)
 
-	days_list_int = [int(day) for day in days_list]
-
-
-	################ Prepare Draw good day ######################
-	def getScope(value):
-		for index, key in enumerate([0, 50, 100, 150, 200, 300, 500]):
-			if value <= key:
-				break
-		if index==0:
-			return 1
-		else:
-			return index
-
-	day_classify_dict = {}
-	day_classify_dict = Counter([getScope(x) for x in wanliu_aqi_list])
-	new_pie_value = []
-	new_pie_color = []
-	new_pie_name = []
-
-	tmp_list = list(day_classify_dict.keys())
-	tmp_list.sort()
-	for key in tmp_list:
-		value = day_classify_dict[key]
-		new_pie_value.append(value)
-		if key ==1:
-			new_pie_color.append('lime')
-			new_pie_name.append('优  ' + str(value) +'天' )
-		elif key ==2:
-			new_pie_color.append('yellow')
-			new_pie_name.append('良  '+ str(value) +'天')
-		elif key ==3:
-			new_pie_color.append('sandybrown')
-			new_pie_name.append('轻度污染  '+ str(value) +'天')
-		elif key ==4:
-			new_pie_color.append('red')
-			new_pie_name.append('中度污染  '+ str(value) +'天')
-		elif key ==5:
-			new_pie_color.append('fuchsia')
-			new_pie_name.append('重度污染  '+ str(value) +'天')
-		elif key ==6:
-			new_pie_color.append('darkred')
-			new_pie_name.append('严重污染  '+ str(value) +'天')
- 
 
 	################################   Draw Line   ###########################
 	plt.figure(num=1, figsize=(14, 6))
-	plt.subplot(121)  
 
 	#Draw Rectangle
-	MONTH_COUNT = 12
+	dept_list = DEPT_STR.split(',')
+	MONTH_COUNT = COL_NUM
 	row = [x+1 for x in range(MONTH_COUNT)]
-	max_api_value = max(month_aqi_avg)
+	max_api_value = max(aqi_avg_list)
 	slabel = '绿色：优' + '  黄色：良\n' + '棕色：轻度污染\n' + '红色：中度污染' 
 	plt.fill_between(row, [50]*MONTH_COUNT, [0]*MONTH_COUNT, facecolor='lime', alpha=1)
 	plt.fill_between(row, [100]*MONTH_COUNT, [50]*MONTH_COUNT, facecolor='yellow', alpha=1)
@@ -273,27 +200,15 @@ if __name__ == '__main__':
 		slabel = slabel +  '\n黑红色：严重污染'
 		plt.fill_between(row, [500]*MONTH_COUNT, [300]*MONTH_COUNT, facecolor='darkred', alpha=1)
 
-	plt.plot(month_list, month_aqi_avg, c='blue', label = None, linewidth =2)
+	plt.bar([x+1 for x in range(35)], aqi_avg_list, label = None)
 	plt.legend(loc='upper left')
 #	plt.grid(True)
-	plt.title(INPUT_MONTH[0:4] + "年" + "万柳地区按月平均AQI指数统计图", fontsize=24)
-	for index, day in enumerate(month_list):
-		plt.text(day, month_aqi_avg[index], month_aqi_avg[index])
-	plt.xticks(month_list)
-
-	#Draw Pie component
-	plt.subplot(222)
-	cols = ['c','m','r','b', 'g']
-	plt.pie(pie_value, labels=pie_name, colors=cols, startangle=90, shadow= True, explode=[0.05 for x in range(len(pie_name))], autopct='%1.1f%%')
-	plt.title(INPUT_MONTH[0:4] + "年"  + "AQI构成情况", fontsize=24)
-	plt.legend(loc='upper left')
-
-	#Draw Pie Good Day
-	plt.subplot(224)
-	plt.pie(new_pie_value, labels=new_pie_name, colors=new_pie_color, startangle=90, shadow= True, explode=[0.05]*len(new_pie_name), autopct='%1.1f%%')
-	plt.title(INPUT_MONTH[0:4] + "年" + "天气情况分布", fontsize=24)
-	plt.legend(loc='upper left')
-	plt.savefig(INPUT_MONTH + '.png', bbox_inches='tight')
+	plt.title(INPUT_MONTH[0:4] + "年" + "北京市35个监测点平均AQI指数统计图", fontsize=24)
+	for index, day in enumerate([x+1 for x in range(35)]):
+		plt.text(day, aqi_avg_list[index], aqi_avg_list[index])
+		plt.text(day, 40, dept_list[index], rotation=90, color='white')
+	plt.xticks([x+1 for x in range(35)])
+	plt.savefig(INPUT_MONTH + '北京市AQI.png', bbox_inches='tight')
 	plt.show()
 	plt.close()
 

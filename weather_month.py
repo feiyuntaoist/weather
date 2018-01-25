@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 from pylab import mpl
 
 #input MONTH
-INPUT_MONTH = '201706'
+INPUT_MONTH = '201712'
 mpl.rcParams['font.sans-serif'] = ['SimHei'] # 指定默认字体
 mpl.rcParams['axes.unicode_minus'] = False # 解决保存图像是负号'-'显示为方块的问题
 
@@ -210,9 +210,11 @@ if __name__ == '__main__':
 	new_pie_value = []
 	new_pie_color = []
 	new_pie_name = []
-	print(day_classify_dict)
 
-	for key, value in day_classify_dict.items():
+	tmp_list = list(day_classify_dict.keys())
+	tmp_list.sort()
+	for key in tmp_list:
+		value = day_classify_dict[key]
 		new_pie_value.append(value)
 		if key ==1:
 			new_pie_color.append('lime')
@@ -238,20 +240,21 @@ if __name__ == '__main__':
 	plt.figure(num=1, figsize=(14, 6))
 	plt.subplot(121)  
 	#Draw Rectangle
-	row = [x+1 for x in range(31)]
 
+	EVERY_MONT_DAYS_COUNT = 31
+	row = [x+1 for x in range(EVERY_MONT_DAYS_COUNT)]
 	max_api_value = max(wanliu_aqi_list)
 	slabel = '绿色：优' + '  黄色：良\n' + '棕色：轻度污染\n' + '红色：中度污染' 
-	plt.fill_between(row, [50]*31, [0]*31, facecolor='lime', alpha=1)
-	plt.fill_between(row, [100]*31, [50]*31, facecolor='yellow', alpha=1)
-	plt.fill_between(row, [150]*31, [100]*31, facecolor='sandybrown', alpha=1)
-	plt.fill_between(row, [200]*31, [150]*31, facecolor='red', alpha=1)
+	plt.fill_between(row, [50]*EVERY_MONT_DAYS_COUNT, [0]*EVERY_MONT_DAYS_COUNT, facecolor='lime', alpha=1)
+	plt.fill_between(row, [150]*EVERY_MONT_DAYS_COUNT, [100]*EVERY_MONT_DAYS_COUNT, facecolor='sandybrown', alpha=1)
+	plt.fill_between(row, [200]*EVERY_MONT_DAYS_COUNT, [150]*EVERY_MONT_DAYS_COUNT, facecolor='red', alpha=1)
+	plt.fill_between(row, [100]*EVERY_MONT_DAYS_COUNT, [50]*EVERY_MONT_DAYS_COUNT, facecolor='yellow', alpha=1)
 	if max_api_value>200:
 		slabel = slabel + '\n紫红色：重度污染'
-		plt.fill_between(row, [300]*31, [200]*31, facecolor='fuchsia', alpha=1)
+		plt.fill_between(row, [300]*EVERY_MONT_DAYS_COUNT, [200]*EVERY_MONT_DAYS_COUNT, facecolor='fuchsia', alpha=1)
 	if max_api_value>300:
 		slabel = slabel +  '\n黑红色：严重污染'
-		plt.fill_between(row, [500]*31, [300]*31, facecolor='darkred', alpha=1)
+		plt.fill_between(row, [500]*EVERY_MONT_DAYS_COUNT, [300]*EVERY_MONT_DAYS_COUNT, facecolor='darkred', alpha=1)
 	
 	plt.plot(days_list_int, wanliu_aqi_list, c='blue', label = slabel, linewidth =2)
 	plt.legend(loc='upper left')
@@ -269,9 +272,6 @@ if __name__ == '__main__':
 	plt.legend(loc='upper left')
 
 	#Draw Pie Good Day
-	print(new_pie_name)
-	print(new_pie_color)
-	print(new_pie_value)
 	plt.subplot(224)
 	plt.pie(new_pie_value, labels=new_pie_name, colors=new_pie_color, startangle=90, shadow= True, explode=[0.05]*len(new_pie_name), autopct='%1.1f%%')
 	plt.title(INPUT_MONTH[0:4] + "年" + INPUT_MONTH[4:6] + "月天气情况分布", fontsize=24)
